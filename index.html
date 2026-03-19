@@ -1,0 +1,246 @@
+<html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="Suu123" content="autor">
+    <title>ChuCoder*</title>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Geist', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body, html {
+            background: #000000;
+            color: #ffffff;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        #app {
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 30px;
+            background: #000;
+        }
+
+        h1 {
+            font-size: 42px;
+            font-weight: 450;
+            text-align: center;
+            margin-top: 12vh;
+            padding: 16px 8px 12px;
+            border-bottom: 1.5px solid #2a2a2a;
+            width: min(800px, 90%);
+            color: #fff;
+        }
+
+        .subtitle {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: #7a7a7a;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        #editor-area {
+            width: min(800px, 90%);
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            margin-top: 28px;
+            gap: 14px;
+        }
+
+        #html-input {
+            flex: 1;
+            min-height: 0;
+            background: transparent;
+            border: none;
+            border-bottom: 1.5px solid #2a2a2a;
+            color: #f0f0f0;
+            outline: none;
+            caret-color: #f7f7f7;
+            font-size: 15px;
+            font-family: 'Geist Mono', 'Fira Mono', 'Menlo', monospace;
+            line-height: 1.6;
+            resize: none;
+            padding: 8px 10px 20px;
+            transition: border-color 0.15s ease;
+        }
+
+        #html-input:focus {
+            border-bottom-color: #7a7a7a;
+        }
+
+        #html-input::placeholder {
+            color: #3a3a3a;
+        }
+
+        .actions {
+            display: flex;
+            justify-content: flex-end;
+            padding-bottom: 20px;
+        }
+
+        #run-btn {
+            background: #000000;
+            color: #ffffff;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 28px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: 'Geist', sans-serif;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #run-btn:hover {
+            background: #000000;
+        }
+
+        #run-btn .material-symbols-outlined {
+            font-size: 18px;
+        }
+
+        /* Fullscreen preview overlay */
+        #preview-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            background: #ffffff;
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+
+        #preview-overlay.visible {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        #preview-bar {
+            height: 48px;
+            min-height: 48px;
+            background: #ffffff;
+            border-bottom: 1px solid #a0a0a0;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            gap: 10px;
+        }
+
+        #close-btn {
+            background: transparent;
+            border: none;
+            color: rgb(0, 0, 0);
+            cursor: pointer;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        #close-btn:hover {
+            background: #ffffff;
+        }
+
+        #close-btn .material-symbols-outlined {
+            font-size: 22px;
+        }
+
+        .bar-label {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: #000000;
+        }
+
+        #preview-iframe {
+            flex: 1;
+            width: 100%;
+            border: none;
+            background: #000000;
+        }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #ffffff; }
+        ::-webkit-scrollbar-thumb { background: #3a3a3a; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h1>ChuCoder*</h1>
+        <p class="subtitle">write · run · preview</p>
+
+        <div id="editor-area">
+            <textarea id="html-input" placeholder="Paste your HTML here..."></textarea>
+            <div class="actions">
+                <button id="run-btn">
+                    <span class="material-symbols-outlined">play_arrow</span>
+                    Start Preview
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="preview-overlay">
+        <div id="preview-bar">
+            <button id="close-btn" title="Close preview">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+            <span class="bar-label">Run Code</span>
+        </div>
+        <iframe id="preview-iframe" sandbox="allow-scripts allow-same-origin allow-forms allow-modals"></iframe>
+    </div>
+
+    <script>
+        const runBtn = document.getElementById('run-btn');
+        const htmlInput = document.getElementById('html-input');
+        const previewOverlay = document.getElementById('preview-overlay');
+        const previewIframe = document.getElementById('preview-iframe');
+        const closeBtn = document.getElementById('close-btn');
+
+        function run() {
+            const code = htmlInput.value.trim();
+            if (!code) return;
+            const blob = new Blob([code], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            previewIframe.src = url;
+            previewOverlay.classList.add('visible');
+        }
+
+        function closePreview() {
+            previewOverlay.classList.remove('visible');
+            previewIframe.src = 'about:blank';
+        }
+
+        runBtn.addEventListener('click', run);
+        closeBtn.addEventListener('click', closePreview);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closePreview();
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') run();
+        });
+    </script>
+
+
+</body></html>
